@@ -4,6 +4,10 @@ let { is, match, ok, not } = require('uvu/assert')
 let { nanoid, customAlphabet } = require('../non-secure')
 let { urlAlphabet } = require('..')
 
+// `require('../non-secure')` loads `non-secure/index.cjs`. The ESM build is a
+// separate copy of the generator loop, so keep a reference to it as well.
+let esm = require('../non-secure/index.js')
+
 test('nanoid / generates URL-friendly IDs', () => {
   for (let i = 0; i < 10; i++) {
     let id = nanoid()
@@ -102,6 +106,26 @@ test('customAlphabet / avoids pool pollution, infinite loop', () => {
   let second = nanoid2()
   let third = nanoid2()
   not.equal(second, third)
+})
+
+test('nanoid / does not hang on negative size', () => {
+  is(nanoid(-1), '')
+  is(nanoid(-100), '')
+})
+
+test('customAlphabet / does not hang on negative size', () => {
+  is(customAlphabet('abcdef')(-1), '')
+  is(customAlphabet('abcdef', -5)(), '')
+})
+
+test('esm / nanoid / does not hang on negative size', () => {
+  is(esm.nanoid(-1), '')
+  is(esm.nanoid(-100), '')
+})
+
+test('esm / customAlphabet / does not hang on negative size', () => {
+  is(esm.customAlphabet('abcdef')(-1), '')
+  is(esm.customAlphabet('abcdef', -5)(), '')
 })
 
 test.run()
